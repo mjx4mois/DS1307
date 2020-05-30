@@ -5,13 +5,12 @@
      Function		: SENSOR_DS1307
      Create Date	: 2017/05/04
 ---------------------------------------------------------------------- */
-#ifndef __DS1307_FUNCTION__
-#define __DS1307_FUNCTION__
 
 #include <stdio.h>
 #include <delay.h>
-#include "Porting_Layer.h"
-#include "SENSOR_DS1307.h"
+#include <datatype_Layer.h>
+#include <swi2c_Layer.h>
+#include <SENSOR_DS1307.h>
 
 /* POWER ON TIME -> 01/01/00 01 00:00:00 (MM/DD/YY DOW HH:MM:SS). */
 /*--------------------------------------------------------------------------------------------------*/
@@ -20,40 +19,40 @@ CHAR8S DS1307_INIT(void)
 	CHAR8S init_flag;
 	DS1307_TIME_STRUCT INIT_TIME;
 
-	/* Set DS1307 stop counting time */
-	init_flag = DS1307_STOP_COUNT();
-	if(init_flag !=0) return -1;
+		/* Set DS1307 stop counting time */
+		init_flag = DS1307_STOP_COUNT();
+		if(init_flag !=0) return -1;
 
-	/* Set DS1307 parameter */
-	INIT_TIME.SECOND=0;
-	INIT_TIME.MINUTE=0;
-	INIT_TIME.HOUR=0;
-	INIT_TIME.WEEK=1;
-	INIT_TIME.DATE=1;
-	INIT_TIME.MONTH=1;
-	INIT_TIME.YEAR=0;
-	
- 	/* write time into DS1307 */
-	init_flag = DS1307_CHANGE_TIME(&INIT_TIME);
-	if(init_flag ==0)
-	{
-		/*write success*/
-		init_flag = DS1307_START_COUNT();
-		if(init_flag == 0)
+		/* Set DS1307 parameter */
+		INIT_TIME.SECOND=0;
+		INIT_TIME.MINUTE=0;
+		INIT_TIME.HOUR=0;
+		INIT_TIME.WEEK=1;
+		INIT_TIME.DATE=1;
+		INIT_TIME.MONTH=1;
+		INIT_TIME.YEAR=0;
+		
+	 	/* write time into DS1307 */
+		init_flag = DS1307_CHANGE_TIME(&INIT_TIME);
+		if(init_flag ==0)
 		{
-			return 0;
+			/*write success*/
+			init_flag = DS1307_START_COUNT();
+			if(init_flag == 0)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
 		}
 		else
-		{
+		{	
+			/* Set DS1307 start counting time */
+			DS1307_START_COUNT();
 			return -1;
 		}
-	}
-	else
-	{	
-		/* Set DS1307 start counting time */
-		DS1307_START_COUNT();
-		return -1;
-	}
 
 }
 /*--------------------------------------------------------------------------------------------------*/
@@ -63,25 +62,25 @@ CHAR8S DS1307_START_COUNT(void)
 	CHAR8S flag = 0;
 	CHAR8U temp_data;
 
-	flag =  i2c_read_1_byte_data(DS1307_SLAVE_ADDRESS,0X00,&temp_data);
-	if(flag == 1)
-	{
-		temp_data = temp_data & DS1307_START_COUNT_TIME;
-		delay_us(50);	/*tiny delay */
-		flag =  i2c_write_1_byte_data(DS1307_SLAVE_ADDRESS,0X00,temp_data);
+		flag =  i2c_read_1_byte_data(DS1307_SLAVE_ADDRESS,0X00,&temp_data);
 		if(flag == 1)
 		{
-			return 0;
+			temp_data = temp_data & DS1307_START_COUNT_TIME;
+			delay_us(50);	/*tiny delay */
+			flag =  i2c_write_1_byte_data(DS1307_SLAVE_ADDRESS,0X00,temp_data);
+			if(flag == 1)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
 		}
 		else
 		{
 			return -1;
 		}
-	}
-	else
-	{
-		return -1;
-	}
 }
 /*--------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------*/
@@ -90,25 +89,25 @@ CHAR8S DS1307_STOP_COUNT(void)
 	CHAR8S flag = 0;
 	CHAR8U temp_data;
 
-	flag =  i2c_read_1_byte_data(DS1307_SLAVE_ADDRESS,0X00,&temp_data);
-	if(flag == 1)
-	{
-		temp_data = temp_data | DS1307_STOP_COUNT_TIME;
-		delay_us(50); /*tiny delay*/
-		flag =  i2c_write_1_byte_data(DS1307_SLAVE_ADDRESS,0X00, temp_data);
+		flag =  i2c_read_1_byte_data(DS1307_SLAVE_ADDRESS,0X00,&temp_data);
 		if(flag == 1)
 		{
-			return 0;
+			temp_data = temp_data | DS1307_STOP_COUNT_TIME;
+			delay_us(50); /*tiny delay*/
+			flag =  i2c_write_1_byte_data(DS1307_SLAVE_ADDRESS,0X00, temp_data);
+			if(flag == 1)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
 		}
 		else
 		{
 			return -1;
 		}
-	}
-	else
-	{
-		return -1;
-	}
 }
 /*--------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------*/
@@ -134,9 +133,10 @@ CHAR8S DS1307_SQW_OUTPUT_SET(CHAR8U MODE)
 
 	CHAR8S flag=0;
 	CHAR8U check_data;
-	if((MODE == DS1307_SQW_Dis_Out_Level_Low) || (MODE == DS1307_SQW_Dis_Out_Level_High) || (MODE == DS1307_SQW_En_Out_Freq_M0)\
-		|| (MODE == DS1307_SQW_En_Out_Freq_M1) || (MODE == DS1307_SQW_En_Out_Freq_M2) || (MODE == DS1307_SQW_En_Out_Freq_M3))
-	{
+	
+		if((MODE == DS1307_SQW_Dis_Out_Level_Low) || (MODE == DS1307_SQW_Dis_Out_Level_High) || (MODE == DS1307_SQW_En_Out_Freq_M0)\
+			|| (MODE == DS1307_SQW_En_Out_Freq_M1) || (MODE == DS1307_SQW_En_Out_Freq_M2) || (MODE == DS1307_SQW_En_Out_Freq_M3))
+		{
 
 			flag = i2c_write_1_byte_data(DS1307_SLAVE_ADDRESS,DS1307_REG_CONTROL,MODE);
 
@@ -163,12 +163,12 @@ CHAR8S DS1307_SQW_OUTPUT_SET(CHAR8U MODE)
 				return -1;	/*write fail*/
 			}
 
-        }
-	else
-	{
+	        }
+		else
+		{
 			/* Not the SET MODE code*/
 			return -1;	/* fail set mode*/
-	}
+		}
 
 }
 /*--------------------------------------------------------------------------------------------------*/
@@ -192,82 +192,82 @@ CHAR8S DS1307_READ_TIME(DS1307_TIME_STRUCT *TIME_INFO)
 	CHAR8S read_flag = 0;
 	CHAR8U read_data_buffer[8] = {0},temp_data1,temp_data2;
 
-	/* read time 8 bytes , start reg addr : 0x00 */
-	read_flag = i2c_read_n_byte_data(DS1307_SLAVE_ADDRESS,0X00,8,&read_data_buffer[0]);
-	if(read_flag == 1)	/*read success*/
-	{
-		/*--------- SECOND ---------*//*BCD format */
-		temp_data1 = ((read_data_buffer[0] & 0x70)>>4)*10 ;
-		temp_data2 = (read_data_buffer[0] & 0x0F) + temp_data1;
-		TIME_INFO->SECOND = temp_data2;
-		/*--------- SECOND ---------*/
+		/* read time 8 bytes , start reg addr : 0x00 */
+		read_flag = i2c_read_n_byte_data(DS1307_SLAVE_ADDRESS,0X00,8,&read_data_buffer[0]);
+		if(read_flag == 1)	/*read success*/
+		{
+			/*--------- SECOND ---------*//*BCD format */
+			temp_data1 = ((read_data_buffer[0] & 0x70)>>4)*10 ;
+			temp_data2 = (read_data_buffer[0] & 0x0F) + temp_data1;
+			TIME_INFO->SECOND = temp_data2;
+			/*--------- SECOND ---------*/
 
-		/*--------- MINUTE ---------*//*BCD format */
-		temp_data1 = ((read_data_buffer[1] & 0x70)>>4)*10 ;
-		temp_data2 = (read_data_buffer[1] & 0x0F) + temp_data1;
-		TIME_INFO->MINUTE = temp_data2;
-		/*--------- MINUTE ---------*/
+			/*--------- MINUTE ---------*//*BCD format */
+			temp_data1 = ((read_data_buffer[1] & 0x70)>>4)*10 ;
+			temp_data2 = (read_data_buffer[1] & 0x0F) + temp_data1;
+			TIME_INFO->MINUTE = temp_data2;
+			/*--------- MINUTE ---------*/
 
-		/*--------- HOUR ---------*//*BCD format */
-		/* if "1" -> 12hr (AM/PM)  , if "0" -> 24hr*/
-		if (read_data_buffer[2] & 0x40 == 1) /* 12hr */
-				{
-					/* if "1" -> PM , if " 0" -> AM*/
-					if (read_data_buffer[2] & 0x20)/*PM*/
+			/*--------- HOUR ---------*//*BCD format */
+			/* if "1" -> 12hr (AM/PM)  , if "0" -> 24hr*/
+			if (read_data_buffer[2] & 0x40 == 1) /* 12hr */
 					{
-						temp_data1 = ((read_data_buffer[2] & 0x70)>>4)*10 + (10) ;		/*+10*/
-						temp_data2 =  (read_data_buffer[2] & 0x0F) + temp_data1  + (2) ;		/* +2*/
-			                     TIME_INFO->HOUR = temp_data2;
+						/* if "1" -> PM , if " 0" -> AM*/
+						if (read_data_buffer[2] & 0x20)/*PM*/
+						{
+							temp_data1 = ((read_data_buffer[2] & 0x70)>>4)*10 + (10) ;		/*+10*/
+							temp_data2 =  (read_data_buffer[2] & 0x0F) + temp_data1  + (2) ;		/* +2*/
+				                     TIME_INFO->HOUR = temp_data2;
+						}
+						else/*AM*/
+						{
+							temp_data1 = ((read_data_buffer[2] & 0x70)>>4)*10; /* No +10*/
+							temp_data2 =  (read_data_buffer[2] & 0x0F) + temp_data1 ; /*No +2*/
+				                     TIME_INFO->HOUR = temp_data2;
+						}
 					}
-					else/*AM*/
+				else	/* 24hr*/
 					{
-						temp_data1 = ((read_data_buffer[2] & 0x70)>>4)*10; /* No +10*/
-						temp_data2 =  (read_data_buffer[2] & 0x0F) + temp_data1 ; /*No +2*/
-			                     TIME_INFO->HOUR = temp_data2;
+					temp_data1 = ((read_data_buffer[2] & 0x30)>>4)*10 ;
+					temp_data2 = (read_data_buffer[2] & 0x0F) + temp_data1;
+					TIME_INFO->HOUR = temp_data2;
 					}
-				}
-			else	/* 24hr*/
-				{
-				temp_data1 = ((read_data_buffer[2] & 0x30)>>4)*10 ;
-				temp_data2 = (read_data_buffer[2] & 0x0F) + temp_data1;
-				TIME_INFO->HOUR = temp_data2;
-				}
-		/*--------- HOUR ---------*/
+			/*--------- HOUR ---------*/
 
-		/*--------- WEEK ---------*//*BCD format */
-		temp_data1 = (read_data_buffer[3] & 0x07) ;
-		TIME_INFO->WEEK = temp_data1;
-		/*--------- WEEK ---------*/
+			/*--------- WEEK ---------*//*BCD format */
+			temp_data1 = (read_data_buffer[3] & 0x07) ;
+			TIME_INFO->WEEK = temp_data1;
+			/*--------- WEEK ---------*/
 
 
-		/*--------- DATE ---------*//*BCD format */
-		temp_data1 = ((read_data_buffer[4] & 0x30)>>4)*10 ;
-		temp_data2 = (read_data_buffer[4] & 0x0F) + temp_data1;
-		TIME_INFO->DATE = temp_data2;
-		/*--------- DATE ---------*/
+			/*--------- DATE ---------*//*BCD format */
+			temp_data1 = ((read_data_buffer[4] & 0x30)>>4)*10 ;
+			temp_data2 = (read_data_buffer[4] & 0x0F) + temp_data1;
+			TIME_INFO->DATE = temp_data2;
+			/*--------- DATE ---------*/
 
 
-		/*--------- MONTH ---------*//*BCD format */
-		temp_data1 = ((read_data_buffer[5] & 0x10)>>4)*10 ;
-		temp_data2 = (read_data_buffer[5] & 0x0F) + temp_data1;
-		TIME_INFO->MONTH = temp_data2;
-		/*--------- MONTH ---------*/
+			/*--------- MONTH ---------*//*BCD format */
+			temp_data1 = ((read_data_buffer[5] & 0x10)>>4)*10 ;
+			temp_data2 = (read_data_buffer[5] & 0x0F) + temp_data1;
+			TIME_INFO->MONTH = temp_data2;
+			/*--------- MONTH ---------*/
 
 
-		/*--------- YEAR ---------*//*BCD format */
-		temp_data1 = ((read_data_buffer[6] & 0xF0)>>4)*10 ;
-		temp_data2 = (read_data_buffer[6] & 0x0F) + temp_data1;
-		TIME_INFO->YEAR = temp_data2;
-		/*--------- YEAR ---------*/
+			/*--------- YEAR ---------*//*BCD format */
+			temp_data1 = ((read_data_buffer[6] & 0xF0)>>4)*10 ;
+			temp_data2 = (read_data_buffer[6] & 0x0F) + temp_data1;
+			TIME_INFO->YEAR = temp_data2;
+			/*--------- YEAR ---------*/
 
-		return 0; 		/*finish trans data*/
+			return 0; 		/*finish trans data*/
 
-		
-	  }
-	 else 
-	 {
-	 	return -1; 		/*read fail*/
-	 }
+			
+		  }
+	 	else 
+	 	{
+	 		return -1; 		/*read fail*/
+	 	}
 }
 /*--------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------*/
@@ -286,9 +286,8 @@ CHAR8S DS1307_CHANGE_TIME(DS1307_TIME_STRUCT *CHANGE_TIME_INFO)
 	}DS1307_TIME_STRUCT;
 	*/
 
-		CHAR8S write_flag = 0;
-		CHAR8U write_data_buffer[7] = {0},temp_data1,temp_data2,temp_data3;
-
+	CHAR8S write_flag = 0;
+	CHAR8U write_data_buffer[7] = {0},temp_data1,temp_data2,temp_data3;
 
 		/*STOP DS1307 to count  & change a New Time for DS1307 count*/
 		write_flag = DS1307_STOP_COUNT();
@@ -457,4 +456,4 @@ CHAR8S DS1307_CHANGE_TIME(DS1307_TIME_STRUCT *CHANGE_TIME_INFO)
 
 }
 /*--------------------------------------------------------------------------------------------------*/
-#endif		//#ifndef __DS1307_FUNCTION__
+

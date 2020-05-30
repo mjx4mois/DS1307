@@ -5,19 +5,18 @@
      Function		: EXAMPLE_DS1307
      Create Date	: 2017/05/05
 ---------------------------------------------------------------------- */
-#ifndef __DS1307_EXAMPLE__
-#define __DS1307_EXAMPLE__
 
 #include <mega32a.h>
 #include <stdio.h>
 #include <delay.h>
 #include <math.h>
 #include <alcd.h>
-#include "SENSOR_DS1307.h"
-#include "Porting_Layer.h"
+#include <datatype_Layer.h>
+#include <swi2c_Layer.h>
+#include <SENSOR_DS1307.h>
+
 
 void EXAMPLE_DS1307(void);
-
 
 void EXAMPLE_DS1307(void)
 {
@@ -28,7 +27,7 @@ void EXAMPLE_DS1307(void)
 	DS1307_TIME_STRUCT DS1307_TIME_SET;
 
 
-		printf("-------------------- RealTimeCount DS1307 --------------------\r\n");
+			printf("-------------------- RealTimeCount DS1307 --------------------\r\n");
 
 			/* slove Read/write fail*/
 			i2c_stop_hang();  
@@ -125,6 +124,7 @@ void EXAMPLE_DS1307(void)
 				check_flag_DS1307 = DS1307_READ_TIME(&DS1307_TIME_BUFFER);		
 				if(check_flag_DS1307 == 0)
 				{
+				
 					printf("set read ok!!\r\n");
 					printf("Time.SECOND = %d\r\n",DS1307_TIME_BUFFER.SECOND);
 					printf("Time.MINUTE = %d\r\n",DS1307_TIME_BUFFER.MINUTE);
@@ -133,7 +133,6 @@ void EXAMPLE_DS1307(void)
 					printf("Time.DATE = %d\r\n",DS1307_TIME_BUFFER.DATE);
 					printf("Time.MONTH = %d\r\n",DS1307_TIME_BUFFER.MONTH);
 					printf("Time.YEAR = %d\r\n",DS1307_TIME_BUFFER.YEAR);
-
 
 
 					/*------ Calculate Time -----*/
@@ -262,4 +261,3 @@ void EXAMPLE_DS1307(void)
                printf("-------------------- RealTimeCount DS1307 --------------------\r\n");
 
 }
-#endif		//#ifndef __DS1307_EXAMPLE__
